@@ -10,3 +10,10 @@ bot = telebot.TeleBot('6673879527:AAGKIM0bC1Aqqk2uhKkx5w71Yupa2WBYYhg');
 def start(message):
     if message.text == '/start':
         bot.send_message(message.chat.id,"Выбери товар и дай много деняк")
+
+
+
+
+
+print("Ready")
+bot.infinity_polling()
