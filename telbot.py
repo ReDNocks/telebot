@@ -8,8 +8,8 @@ from telebot.types import InputMediaPhoto
 bot = telebot.TeleBot('6673879527:AAGKIM0bC1Aqqk2uhKkx5w71Yupa2WBYYhg');
 
 def create_keyboard_1():
-    markup1 = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("👋 Регистрация")
+    markup1 = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    btn1 = types.KeyboardButton("Регистрация 👋")
     markup1.add(btn1)
     return markup1
 
@@ -27,12 +27,28 @@ def create_keyboard_3():
     markup3.add(btn1)
     return markup3
 
-@bot.message_handler(content_types=['text'])
+@bot.message_handler(commands=['start'])
 def start(message):
     if message.text == '/start':
         bot.send_message(message.chat.id,
-                         text="Привет", reply_markup=create_keyboard_2())
+                         text="Добро пожаловать в бот ресторан нажми кнопку регистрации чтобы продолжить.", reply_markup=create_keyboard_1())
 
+@bot.message_handler(content_types=['text'])
+def reg(message):
+
+    if message.text == "Регистрация 👋":
+        bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
+        print(message)
+    elif message.text.istitle():
+        bot.send_message(message.chat.id, text="Введите свой номер телефона начиная с +375")
+        print(message)
+
+    elif "+375" in message.text:
+        bot.send_message(message.chat.id, text="Введите свой адрес доставки")
+        print(message)
+    elif "+375" not in message.text:
+        bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
+        return
 
 
 print("Ready")
