@@ -36,10 +36,9 @@ def start(message):
 
 @bot.message_handler(content_types=['text'])
 def reg(message):
-
-    #sql_insert = "INSERT OR IGNORE INTO USERS (name,tel,address) values(?, ?, ?)"
     if message.text == "Регистрация 👋":
         bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
+        user.append(message.from_user.id)
 
     elif message.text.istitle():
         user.append(message.text)
@@ -54,19 +53,11 @@ def reg(message):
         bot.send_message(message.chat.id, text="Регистрация завершена")
         con = sl.connect('tgbase.db')
         with con:
-            con.execute("INSERT OR IGNORE INTO USERS (name,tel,address) values(?, ?, ?)", user)
+            con.execute("INSERT OR IGNORE INTO USERS (id_telegram,name,tel,address) values(?, ?, ?, ?)", user)
 
     else:
         bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
         return
-
-
-
-
-
-
-
-
 
 
 
