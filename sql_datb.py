@@ -7,11 +7,13 @@ with con:
     con.execute("""
         CREATE TABLE IF NOT EXISTS USERS (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            id_telegram TEXT
             name TEXT,
             address TEXT,
             post INTEGER,
             tel TEXT,
             UNIQUE(tel)
+            UNIQUE(id_telegram)
         );
     """)
     # Заказы

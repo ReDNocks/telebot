@@ -60,5 +60,15 @@ def reg(message):
         bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
         return
 
+
+
+
+
+
+
+
+
+
+
 print("Ready")
 bot.infinity_polling()
