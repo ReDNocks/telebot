@@ -3,10 +3,11 @@ import telebot
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import InputMediaPhoto
-
+import sqlite3 as sl
 
 bot = telebot.TeleBot('6673879527:AAGKIM0bC1Aqqk2uhKkx5w71Yupa2WBYYhg');
-
+global user
+user = []
 def create_keyboard_1():
     markup1 = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     btn1 = types.KeyboardButton("Регистрация 👋")
@@ -36,20 +37,28 @@ def start(message):
 @bot.message_handler(content_types=['text'])
 def reg(message):
 
+    #sql_insert = "INSERT OR IGNORE INTO USERS (name,tel,address) values(?, ?, ?)"
     if message.text == "Регистрация 👋":
         bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
-        print(message)
+
     elif message.text.istitle():
+        user.append(message.text)
         bot.send_message(message.chat.id, text="Введите свой номер телефона начиная с +375")
-        print(message)
 
     elif "+375" in message.text:
-        bot.send_message(message.chat.id, text="Введите свой адрес доставки")
-        print(message)
-    elif "+375" not in message.text:
+        user.append(message.text)
+        bot.send_message(message.chat.id, text="Введите свой адрес доставки начиная с ул.")
+
+    elif "ул." in message.text:
+        user.append(message.text)
+        bot.send_message(message.chat.id, text="Регистрация завершена")
+        con = sl.connect('tgbase.db')
+        with con:
+            con.execute("INSERT OR IGNORE INTO USERS (name,tel,address) values(?, ?, ?)", user)
+
+    else:
         bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
         return
-
 
 print("Ready")
 bot.infinity_polling()
