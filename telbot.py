@@ -32,10 +32,9 @@ def create_keyboard_3():
 def menu_gen():
     con = sl.connect('tgbase.db')
     categ_k = con.execute(f"SELECT name FROM CATEGORY").fetchall()
-    print(list(categ_k[0])[0])
     keyb = InlineKeyboardMarkup()
     for i in range(len(categ_k)):
-        keyb.add(InlineKeyboardButton(list(categ_k[i])[0], callback_data="None"))
+        keyb.add(InlineKeyboardButton(list(categ_k[i])[0], callback_data="m"+str(i+1)))
     return keyb
 
 
@@ -86,14 +85,25 @@ def reg(message):
             bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
             return
 
-
-
+    # Меню
     if message.text == "Меню 📜":
         bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())
 
 
 
-#Меню
+@bot.callback_query_handler(func=lambda call: True)
+def query_handler(call):
+    bot.answer_callback_query(callback_query_id=call.id,)
+    id = call.message.chat.id
+    flag = call.data[0]
+    data = call.data[1:]
+    print(flag,data)
+    # if flag == "m":
+    #     num = int(data)
+    #     text = ""
+    #     for i in [0,2,3,4,5]:
+    #         text += f"{head[i]} {list_of_lists[num][i]}\n"
+    #     bot.send_message(call.message.chat.id,text)
 
 
 
