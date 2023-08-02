@@ -29,10 +29,19 @@ def create_keyboard_3():
     markup3.add(btn1)
     return markup3
 
+def menu_gen():
+    con = sl.connect('tgbase.db')
+    categ_k = con.execute(f"SELECT name FROM CATEGORY").fetchall()
+    print(list(categ_k[0])[0])
+    keyb = InlineKeyboardMarkup()
+    for i in range(len(categ_k)):
+        keyb.add(InlineKeyboardButton(list(categ_k[i])[0], callback_data="None"))
+    return keyb
 
 
 
 
+# Запуск бота и проверка на регистрацию
 @bot.message_handler(commands=['start'])
 def start(message):
     con = sl.connect('tgbase.db')
@@ -49,30 +58,48 @@ def start(message):
             bot.send_message(message.chat.id,
                          text="Добро пожаловать в бот ресторан нажми кнопку регистрации чтобы продолжить.", reply_markup=create_keyboard_1())
 
+
 @bot.message_handler(content_types=['text'])
+
 def reg(message):
+
     if message.text == "Регистрация 👋":
         bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
         user.append(message.from_user.id)
 
-    elif message.text.istitle():
-        user.append(message.text)
-        bot.send_message(message.chat.id, text="Введите свой номер телефона начиная с +375")
+        if message.text.istitle():
+            user.append(message.text)
+            bot.send_message(message.chat.id, text="Введите свой номер телефона начиная с +375")
 
-    elif "+375" in message.text:
-        user.append(message.text)
-        bot.send_message(message.chat.id, text="Введите свой адрес доставки начиная с ул.")
+        elif "+375" in message.text:
+            user.append(message.text)
+            bot.send_message(message.chat.id, text="Введите свой адрес доставки начиная с ул.")
 
-    elif "ул." in message.text:
-        user.append(message.text)
-        bot.send_message(message.chat.id, text="Регистрация завершена",reply_markup=create_keyboard_2())
-        con = sl.connect('tgbase.db')
-        with con:
-            con.execute("INSERT OR IGNORE INTO USERS (id_telegram,name,tel,address) values(?, ?, ?, ?)", user)
+        elif "ул." in message.text:
+            user.append(message.text)
+            bot.send_message(message.chat.id, text="Регистрация завершена",reply_markup=create_keyboard_2())
+            con = sl.connect('tgbase.db')
+            with con:
+                con.execute("INSERT OR IGNORE INTO USERS (id_telegram,name,tel,address) values(?, ?, ?, ?)", user)
 
-    else:
-        bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
-        return
+        else:
+            bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
+            return
+
+
+
+    if message.text == "Меню 📜":
+        bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())
+
+
+
+#Меню
+
+
+
+
+
+
 
 
 
