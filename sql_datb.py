@@ -49,6 +49,7 @@ with con:
             category INTEGER,
             cooking_time DATATIME,
             rating INTEGER,
+            stoped BOOLEAN,
             FOREIGN KEY (category)  REFERENCES CATEGORY (id)
              
         );
@@ -61,14 +62,6 @@ with con:
         );
     """)
 
-    con.execute("""
-            CREATE TABLE IF NOT EXISTS MENU (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                stop BOOLEAN,
-                FOREIGN KEY (name)  REFERENCES DISHES (id)
-            );
-        """)
 
 
 sql_insert = "INSERT OR IGNORE INTO CATEGORY (id, name) values(?, ?)"

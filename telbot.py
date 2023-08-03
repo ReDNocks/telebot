@@ -40,6 +40,8 @@ def menu_gen():
 
 
 
+
+
 # Запуск бота и проверка на регистрацию
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -76,13 +78,15 @@ def reg(message):
 
     elif "ул." in message.text:
         user.append(message.text)
-        bot.send_message(message.chat.id, text="Регистрация завершена",reply_markup=create_keyboard_2())
+        sel = bot.send_message(message.chat.id, text="Регистрация завершена",reply_markup=create_keyboard_2())
+        bot.register_next_step_handler(sel, menu)
         con = sl.connect('tgbase.db')
         with con:
             con.execute("INSERT OR IGNORE INTO USERS (id_telegram,name,tel,address) values(?, ?, ?, ?)", user)
 
     else:
-        bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
+        fol = bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
+        bot.register_next_step_handler(fol, reg)
         return
 
 
@@ -93,19 +97,26 @@ def menu(message):
         bot.register_next_step_handler(answer, menu)
 
 
+
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id,)
     id = call.message.chat.id
-    flag = call.data[0]
-    data = call.data[1:]
-    print(flag,data)
-    # if flag == "m":
-    #     num = int(data)
-    #     text = ""
-    #     for i in [0,2,3,4,5]:
-    #         text += f"{head[i]} {list_of_lists[num][i]}\n"
-    #     bot.send_message(call.message.chat.id,text)
+    flag_1 = call.data[0]
+    data_1 = call.data[1:]
+    con = sl.connect('tgbase.db')
+    dish_k = con.execute(f"SELECT name,category FROM DISHES").fetchall()
+    keyb_dish = InlineKeyboardMarkup()
+    if flag_1 == "m":
+        num = int(data_1)
+        for i in range(len(dish_k)):
+            if num == list(dish_k[i])[1]:
+                keyb_dish.add(InlineKeyboardButton(list(dish_k[i])[0], callback_data="n" + str(i + 1)))
+    bot.send_message(call.message.chat.id, text="Выберите блюдо", reply_markup=keyb_dish)
+
+
 
 
 
