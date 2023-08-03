@@ -50,15 +50,14 @@ def start(message):
         user_id += str(i)
     if message.text == '/start':
         if str(message.from_user.id) in user_id:
-            bot.send_message(message.chat.id,
+            answ = bot.send_message(message.chat.id,
                          text="Добро пожаловать в бот ресторан.",
                          reply_markup=create_keyboard_2())
-            bot.load_next_step_handlers(menu)
+            bot.register_next_step_handler(answ,menu)
         else:
-            bot.send_message(message.chat.id,
+            regstr = bot.send_message(message.chat.id,
                          text="Добро пожаловать в бот ресторан нажми кнопку регистрации чтобы продолжить.", reply_markup=create_keyboard_1())
-            bot.register_next_step_handler(reg)
-
+            bot.register_next_step_handler(regstr,reg)
 @bot.message_handler(content_types=['text'])
 
 def reg(message):
@@ -90,8 +89,8 @@ def reg(message):
 def menu(message):
     # Меню
     if message.text == "Меню 📜":
-        bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())
-
+        answer = bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())
+        bot.register_next_step_handler(answer, menu)
 
 
 @bot.callback_query_handler(func=lambda call: True)
