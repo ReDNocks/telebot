@@ -53,10 +53,11 @@ def start(message):
             bot.send_message(message.chat.id,
                          text="Добро пожаловать в бот ресторан.",
                          reply_markup=create_keyboard_2())
+            bot.load_next_step_handlers(menu)
         else:
             bot.send_message(message.chat.id,
                          text="Добро пожаловать в бот ресторан нажми кнопку регистрации чтобы продолжить.", reply_markup=create_keyboard_1())
-
+            bot.register_next_step_handler(reg)
 
 @bot.message_handler(content_types=['text'])
 
@@ -66,25 +67,27 @@ def reg(message):
         bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
         user.append(message.from_user.id)
 
-        if message.text.istitle():
-            user.append(message.text)
-            bot.send_message(message.chat.id, text="Введите свой номер телефона начиная с +375")
+    elif message.text.istitle():
+        user.append(message.text)
+        bot.send_message(message.chat.id, text="Введите свой номер телефона начиная с +375")
 
-        elif "+375" in message.text:
-            user.append(message.text)
-            bot.send_message(message.chat.id, text="Введите свой адрес доставки начиная с ул.")
+    elif "+375" in message.text:
+        user.append(message.text)
+        bot.send_message(message.chat.id, text="Введите свой адрес доставки начиная с ул.")
 
-        elif "ул." in message.text:
-            user.append(message.text)
-            bot.send_message(message.chat.id, text="Регистрация завершена",reply_markup=create_keyboard_2())
-            con = sl.connect('tgbase.db')
-            with con:
-                con.execute("INSERT OR IGNORE INTO USERS (id_telegram,name,tel,address) values(?, ?, ?, ?)", user)
+    elif "ул." in message.text:
+        user.append(message.text)
+        bot.send_message(message.chat.id, text="Регистрация завершена",reply_markup=create_keyboard_2())
+        con = sl.connect('tgbase.db')
+        with con:
+            con.execute("INSERT OR IGNORE INTO USERS (id_telegram,name,tel,address) values(?, ?, ?, ?)", user)
 
-        else:
-            bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
-            return
+    else:
+        bot.send_message(message.chat.id, text="Что-то пошло не так попробуй еще раз")
+        return
 
+
+def menu(message):
     # Меню
     if message.text == "Меню 📜":
         bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())

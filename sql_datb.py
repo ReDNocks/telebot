@@ -21,8 +21,9 @@ with con:
         CREATE TABLE IF NOT EXISTS ORDERS (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             time_deliv TIME,
-            USER INTEGER,
-            payment BOOLEAN
+            user INTEGER,
+            payment BOOLEAN,
+            FOREIGN KEY (user)  REFERENCES USERS(id)
         );
     """)
     #Корзина
@@ -31,7 +32,9 @@ with con:
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             dishes INTEGER, 
             kol_vo_dishes INTEGER,
-            orders INTEGER
+            orders INTEGER,
+            FOREIGN KEY (orders)  REFERENCES ORDERS (id),
+            FOREIGN KEY (dishes)  REFERENCES DISHES (id)
         );
     """)
     #Блюда
@@ -45,7 +48,9 @@ with con:
             photo IMAGE,
             category INTEGER,
             cooking_time DATATIME,
-            rating INTEGER
+            rating INTEGER,
+            FOREIGN KEY (category)  REFERENCES CATEGORY (id)
+             
         );
     """)
     #Категория блюд
@@ -56,7 +61,14 @@ with con:
         );
     """)
 
-
+    con.execute("""
+            CREATE TABLE IF NOT EXISTS MENU (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                stop BOOLEAN,
+                FOREIGN KEY (name)  REFERENCES DISHES (id)
+            );
+        """)
 
 
 sql_insert = "INSERT OR IGNORE INTO CATEGORY (id, name) values(?, ?)"
