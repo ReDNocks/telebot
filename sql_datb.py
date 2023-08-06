@@ -30,20 +30,31 @@ with con:
     con.execute("""
         CREATE TABLE IF NOT EXISTS BASKET (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            dishes INTEGER, 
-            kol_vo_dishes INTEGER,
+            goods INTEGER,
             orders INTEGER,
             FOREIGN KEY (orders)  REFERENCES ORDERS (id),
-            FOREIGN KEY (dishes)  REFERENCES DISHES (id)
+            FOREIGN KEY (goods)  REFERENCES GOODS (id)
         );
     """)
+
+    con.execute("""
+            CREATE TABLE IF NOT EXISTS GOODS (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                dishes INTEGER, 
+                kol_vo_dishes INTEGER,
+                user_id INTEGER,
+                FOREIGN KEY (user_id)  REFERENCES USERS (id),
+                FOREIGN KEY (dishes)  REFERENCES DISHES (id)
+            );
+        """)
+
     #Блюда
     con.execute("""
         CREATE TABLE IF NOT EXISTS DISHES (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             name TEXT,
-            weight INTEGER,
-            price FLOAT,
+            weight TEXT,
+            price TEXT,
             description LONGTEXT,
             photo IMAGE,
             category INTEGER,
@@ -64,17 +75,3 @@ with con:
 
 
 
-sql_insert = "INSERT OR IGNORE INTO CATEGORY (id, name) values(?, ?)"
-# INSERT OR IGNORE - модификатор для уникальных значений
-with con:
-    con.execute(sql_insert, [1, "Горячее"])
-    # executemany - для двумерного
-    con.execute(sql_insert, [2, "Напитки"])
-
-
-# with con:
-#     data = con.execute("SELECT * FROM SERVICES").fetchall()
-#     print(data)
-#     # data = con.execute("PRAGMA table_info(CLIENTS);").fetchall()
-#     # for x in data:
-#     #     print(x[1])

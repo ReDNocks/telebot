@@ -37,8 +37,18 @@ def menu_gen():
         keyb.add(InlineKeyboardButton(list(categ_k[i])[0], callback_data="m"+str(i+1)))
     return keyb
 
-
-
+def create_keyb_4(boon,dish):
+    keyb_2 = InlineKeyboardMarkup()
+    one_btn = types.InlineKeyboardButton(text="➕", callback_data='1')
+    two_btn = types.InlineKeyboardButton(text="➖", callback_data='2')
+    three_btn = types.InlineKeyboardButton(text="Заказать 📒", callback_data='3')
+    four_btn = types.InlineKeyboardButton(text="Добавить в корзину 🛒", callback_data='4')
+    five_btn = types.InlineKeyboardButton(text="Следующее блюдо ➡️", callback_data="z"+str(dish))
+    six_btn = types.InlineKeyboardButton(text=f"{boon}", callback_data='6')
+    keyb_2.add(two_btn,six_btn,one_btn)
+    keyb_2.add(three_btn,four_btn)
+    keyb_2.add(five_btn)
+    return keyb_2
 
 
 
@@ -48,13 +58,14 @@ def start(message):
     con = sl.connect('tgbase.db')
     user_list = con.execute(f"SELECT id_telegram FROM USERS").fetchall()
     user_id = ""
+    dicty = {"chat_id":message.chat.id,"text":"Добро пожаловать в бот ресторан.",
+             "reply_markup":create_keyboard_2()}
+
     for i in user_list:
         user_id += str(i)
     if message.text == '/start':
         if str(message.from_user.id) in user_id:
-            answ = bot.send_message(message.chat.id,
-                         text="Добро пожаловать в бот ресторан.",
-                         reply_markup=create_keyboard_2())
+            answ = bot.send_message(**dicty)
             bot.register_next_step_handler(answ,menu)
         else:
             regstr = bot.send_message(message.chat.id,
@@ -65,8 +76,16 @@ def start(message):
 def reg(message):
 
     if message.text == "Регистрация 👋":
-        bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
+        a = bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
         user.append(message.from_user.id)
+
+    elif message.text == "Корзина 🛒":
+        korz = bot.send_message(message.chat.id, text="Привет")
+        bot.register_next_step_handler(korz, kor)
+
+    elif message.text == "Меню 📜":
+        answer = bot.send_message(message.chat.id, text="Выберисте категорию", reply_markup=menu_gen())
+        bot.register_next_step_handler(answer, menu)
 
     elif message.text.istitle():
         user.append(message.text)
@@ -94,34 +113,75 @@ def menu(message):
     # Меню
     if message.text == "Меню 📜":
         answer = bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())
-        bot.register_next_step_handler(answer, menu)
 
-
+def kor(message):
+    if message.text == "Корзина 🛒":
+        korz = bot.send_message(message.chat.id, text="хай")
 
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
+
     bot.answer_callback_query(callback_query_id=call.id,)
     id = call.message.chat.id
-    flag_1 = call.data[0]
-    data_1 = call.data[1:]
+    flag = call.data[0]
+    data = call.data[1:]
     con = sl.connect('tgbase.db')
     dish_k = con.execute(f"SELECT name,category FROM DISHES").fetchall()
     keyb_dish = InlineKeyboardMarkup()
-    if flag_1 == "m":
-        num = int(data_1)
+    if flag == "m":
+        num = int(data)
         for i in range(len(dish_k)):
             if num == list(dish_k[i])[1]:
                 keyb_dish.add(InlineKeyboardButton(list(dish_k[i])[0], callback_data="n" + str(i + 1)))
-    bot.send_message(call.message.chat.id, text="Выберите блюдо", reply_markup=keyb_dish)
+        bot.send_message(call.message.chat.id, text="Выберите блюдо", reply_markup=keyb_dish)
+    if flag == "n":
+        sr = ""
+        num = int(data)
+        con = sl.connect('tgbase.db')
+        dish = con.execute(f"SELECT photo,name,weight,description,price,stoped FROM DISHES").fetchall()
+        for a in dish[num-1][1:5]:
+            sr += f'{str(a)}\n'
+        bot.send_photo(call.message.chat.id, dish[num - 1][0])
+        bot.send_message(call.message.chat.id,text=f'№{num}\n{sr}',reply_markup=create_keyb_4(1,num))
 
 
+    if flag == '1':
+        text = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
+        num = call.message.json["text"][1]
+        bot.edit_message_reply_markup(
+             chat_id=call.message.chat.id,
+             message_id=call.message.message_id,
+             reply_markup=create_keyb_4(int(text)+1,num))
 
+    if flag == '2':
+        text = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
+        num = call.message.json["text"][1]
+        bot.edit_message_reply_markup(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=create_keyb_4(int(text)-1,num))
 
+    if flag == 'z':
+        sr = ""
+        num = int(data)+1
+        con = sl.connect('tgbase.db')
+        dish = con.execute(f"SELECT photo,name,weight,description,price,stoped FROM DISHES").fetchall()
+        for a in dish[num - 1][1:5]:
+            sr += f'{str(a)}\n'
+        bot.send_photo(call.message.chat.id, dish[num - 1][0])
+        bot.send_message(call.message.chat.id, text=f'№{num}\n{sr}', reply_markup=create_keyb_4(1,num))
 
-
-
+    if flag == "4":
+        bot.send_message(call.message.chat.id, text="dfgdfgdfg")
+        spis = []
+        a = call.message.json["text"][1]
+        b = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
+        spis.append(a)
+        spis.append(b)
+        with con:
+            con.execute(f"INSERT OR IGNORE INTO BASKET (dishes,kol_vo_dishes) values(?,?)",spis)
 
 
 
