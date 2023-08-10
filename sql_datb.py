@@ -23,27 +23,18 @@ with con:
             time_deliv TIME,
             user INTEGER,
             payment BOOLEAN,
-            FOREIGN KEY (user)  REFERENCES USERS(id)
-        );
-    """)
-    #Корзина
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS BASKET (
-            id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             goods INTEGER,
-            orders INTEGER,
-            FOREIGN KEY (orders)  REFERENCES ORDERS (id),
+            FOREIGN KEY (user)  REFERENCES USERS(id)
             FOREIGN KEY (goods)  REFERENCES GOODS (id)
         );
     """)
 
+    # Товары
     con.execute("""
             CREATE TABLE IF NOT EXISTS GOODS (
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 dishes INTEGER, 
                 kol_vo_dishes INTEGER,
-                user_id INTEGER,
-                FOREIGN KEY (user_id)  REFERENCES USERS (id),
                 FOREIGN KEY (dishes)  REFERENCES DISHES (id)
             );
         """)

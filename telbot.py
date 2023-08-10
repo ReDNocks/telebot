@@ -9,6 +9,9 @@ bot = telebot.TeleBot('6673879527:AAGKIM0bC1Aqqk2uhKkx5w71Yupa2WBYYhg');
 global user
 user = []
 
+#-1001980704979
+
+
 def create_keyboard_1():
     markup1 = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     btn1 = types.KeyboardButton("Регистрация 👋")
@@ -51,6 +54,19 @@ def create_keyb_4(boon,dish):
     return keyb_2
 
 
+def create_keyb_5():
+    keyb_5 = InlineKeyboardMarkup()
+    one_btn = types.InlineKeyboardButton(text="Изменить кол-во", callback_data='8')
+    two_btn = types.InlineKeyboardButton(text="Подтвердить заказ", callback_data='9')
+    keyb_5.add(one_btn,two_btn)
+    return keyb_5
+
+def create_keyb_6(dish):
+    keyb_6 = InlineKeyboardMarkup()
+    for i in range(len(dish)):
+        print(i)
+        keyb_6.add(InlineKeyboardButton(str(dish[i]), callback_data="b" + str(i + 1)))
+    return keyb_6
 
 # Запуск бота и проверка на регистрацию
 @bot.message_handler(commands=['start'])
@@ -71,6 +87,7 @@ def start(message):
             regstr = bot.send_message(message.chat.id,
                          text="Добро пожаловать в бот ресторан нажми кнопку регистрации чтобы продолжить.", reply_markup=create_keyboard_1())
             bot.register_next_step_handler(regstr,reg)
+
 @bot.message_handler(content_types=['text'])
 
 def reg(message):
@@ -79,13 +96,19 @@ def reg(message):
         a = bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
         user.append(message.from_user.id)
 
+    # elif message.text.isdigit():
+    #     gg(message)
+
     elif message.text == "Корзина 🛒":
-        korz = bot.send_message(message.chat.id, text="Привет")
-        bot.register_next_step_handler(korz, kor)
+        kor(message)
 
     elif message.text == "Меню 📜":
-        answer = bot.send_message(message.chat.id, text="Выберисте категорию", reply_markup=menu_gen())
-        bot.register_next_step_handler(answer, menu)
+        menu(message)
+
+    elif message.text == "Поддержка ❓":
+        a = bot.send_message(message.chat.id, text="Напиши сообщение")
+        bot.register_next_step_handler(a, support)
+
 
     elif message.text.istitle():
         user.append(message.text)
@@ -111,13 +134,22 @@ def reg(message):
 
 def menu(message):
     # Меню
-    if message.text == "Меню 📜":
-        answer = bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())
+    answer = bot.send_message(message.chat.id, text="Выберисте категорию",reply_markup=menu_gen())
 
 def kor(message):
     if message.text == "Корзина 🛒":
-        korz = bot.send_message(message.chat.id, text="хай")
+        korzinka = []
+        con = sl.connect('tgbase.db')
+        goods = con.execute(f"SELECT dishes,kol_vo_dishes FROM GOODS ").fetchall()
+        for i in range(len(goods)):
+            dish = con.execute(f"SELECT id, name FROM DISHES WHERE id = {int(goods[i][0])} ").fetchall()
+            korzinka.append(dish[0][1])
+            korzinka.append(f"Кол-во блюд = {goods[i][1]}")
+        a = "\n".join(korzinka)
+        bot.send_message(message.chat.id, text=f'{a}', reply_markup=create_keyb_5())
 
+def support(message):
+    bot.send_message(-1001980704979, text=f"{message.chat.username} просит о помощи \n{message.text}")
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -139,6 +171,7 @@ def query_handler(call):
     if flag == "n":
         sr = ""
         num = int(data)
+        print(num)
         con = sl.connect('tgbase.db')
         dish = con.execute(f"SELECT photo,name,weight,description,price,stoped FROM DISHES").fetchall()
         for a in dish[num-1][1:5]:
@@ -174,14 +207,24 @@ def query_handler(call):
         bot.send_message(call.message.chat.id, text=f'№{num}\n{sr}', reply_markup=create_keyb_4(1,num))
 
     if flag == "4":
-        bot.send_message(call.message.chat.id, text="dfgdfgdfg")
+        bot.send_message(call.message.chat.id, text="Товар успешно добавлен в корзину")
         spis = []
-        a = call.message.json["text"][1]
-        b = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
-        spis.append(a)
-        spis.append(b)
+        id_dish = call.message.json["text"][1]
+        kil_vo = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
+        # id_user = call.message.json["chat"]["id"]
+        spis.append(id_dish)
+        spis.append(kil_vo)
         with con:
-            con.execute(f"INSERT OR IGNORE INTO BASKET (dishes,kol_vo_dishes) values(?,?)",spis)
+            con.execute(f"INSERT OR IGNORE INTO GOODS (dishes,kol_vo_dishes) values(?,?)",spis)
+
+    if flag == "8":
+        text = call.message.json["text"]
+        lists = text.split("\n")
+        a = lists[::2]
+        bot.send_message(call.message.chat.id, text=f'Выбери блюдо', reply_markup=create_keyb_6(a))
+
+    if flag == "b":
+        bot.send_message(call.message.chat.id, text=f'Введи кол-во')
 
 
 
