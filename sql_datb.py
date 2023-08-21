@@ -22,10 +22,9 @@ with con:
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             time_deliv TIME,
             user INTEGER,
-            payment BOOLEAN,
-            goods INTEGER,
+            payment BOOLEAN(0),
+            date DATETIME,
             FOREIGN KEY (user)  REFERENCES USERS(id)
-            FOREIGN KEY (goods)  REFERENCES GOODS (id)
         );
     """)
 
@@ -35,7 +34,9 @@ with con:
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 dishes INTEGER, 
                 kol_vo_dishes INTEGER,
-                FOREIGN KEY (dishes)  REFERENCES DISHES (id)
+                orders INTEGER,
+                FOREIGN KEY (dishes)  REFERENCES DISHES (id),
+                FOREIGN KEY (orders)  REFERENCES ORDERS (id)
             );
         """)
 

@@ -4,6 +4,7 @@ from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import InputMediaPhoto
 import sqlite3 as sl
+from functools import partial
 
 bot = telebot.TeleBot('6673879527:AAGKIM0bC1Aqqk2uhKkx5w71Yupa2WBYYhg');
 global user
@@ -68,6 +69,11 @@ def create_keyb_6(dish):
         keyb_6.add(InlineKeyboardButton(str(dish[i]), callback_data="b" + str(i + 1)))
     return keyb_6
 
+
+
+
+
+
 # Запуск бота и проверка на регистрацию
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -88,22 +94,31 @@ def start(message):
                          text="Добро пожаловать в бот ресторан нажми кнопку регистрации чтобы продолжить.", reply_markup=create_keyboard_1())
             bot.register_next_step_handler(regstr,reg)
 
+
+bbb = {}
+
 @bot.message_handler(content_types=['text'])
 
 def reg(message):
 
     if message.text == "Регистрация 👋":
+        con = sl.connect('tgbase.db')
         a = bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
-        user.append(message.from_user.id)
+        id_user = message.json["chat"]["id"]
+        ord_date = message.json["date"]
+        user.append(id_user)
+        with con:
+            con.execute(f"INSERT OR IGNORE INTO ORDERS (user,date) values({int(id_user)},{ord_date})")
 
-    # elif message.text.isdigit():
-    #     gg(message)
 
     elif message.text == "Корзина 🛒":
         kor(message)
 
     elif message.text == "Меню 📜":
         menu(message)
+
+    elif message.text == "Мои заказы 📒":
+        ord(message)
 
     elif message.text == "Поддержка ❓":
         a = bot.send_message(message.chat.id, text="Напиши сообщение")
@@ -140,7 +155,8 @@ def kor(message):
     if message.text == "Корзина 🛒":
         korzinka = []
         con = sl.connect('tgbase.db')
-        goods = con.execute(f"SELECT dishes,kol_vo_dishes FROM GOODS ").fetchall()
+        id_order = con.execute(f"SELECT id FROM ORDERS WHERE user = {message.json['chat']['id']} ").fetchall()
+        goods = con.execute(f"SELECT dishes,kol_vo_dishes FROM GOODS WHERE orders = {id_order[0][0]} ").fetchall()
         for i in range(len(goods)):
             dish = con.execute(f"SELECT id, name FROM DISHES WHERE id = {int(goods[i][0])} ").fetchall()
             korzinka.append(dish[0][1])
@@ -148,9 +164,41 @@ def kor(message):
         a = "\n".join(korzinka)
         bot.send_message(message.chat.id, text=f'{a}', reply_markup=create_keyb_5())
 
+
+def change(message):
+    con = sl.connect('tgbase.db')
+    with con:
+        con.execute(f"UPDATE GOODS SET kol_vo_dishes ={int(message.text)} WHERE id = {int(bbb['flag'])}")
+
+
+def ord(message):
+    list_mess = []
+    con = sl.connect('tgbase.db')
+    id_user = message.json["chat"]["id"]
+    orders = con.execute(f"SELECT * FROM ORDERS INNER JOIN GOODS ON ORDERS.id = GOODS.orders WHERE user ={id_user} ").fetchall()
+    spis = ['Номер заказа','Время доставки заказа','USER:','Статус оплаты']
+    spis_mess = dict(zip(spis,orders[0][:4]))
+    print(orders[0][7])
+    del spis_mess['USER:']
+    spis_mess['Статус оплаты'] = "Не оплачен"
+    a = 0
+    b = 15
+    for u in range(len(orders)):
+        name_dish = con.execute(f"SELECT name,price,cooking_time FROM DISHES WHERE id = {orders[u][5:][0]}  ").fetchall()
+        spis_mess[name_dish[0][0]] = str(orders[u][5:][2])+"-шт"
+        a = a+(int(name_dish[0][1][:2])*int(orders[u][7]))
+        b = b+(name_dish[0][2]*int(orders[u][7]))
+    spis_mess['Время доставки заказа'] = str(b)+"-Минут"
+    spis_mess['Общая стоимость заказа'] = str(a)+"-рублей"
+    for k, v in spis_mess.items():
+        list_mess.append(k + ': ' + str(v))
+    v = '\n'.join(list_mess)
+    bot.send_message(message.chat.id, text=f"{'Ваши заказы 📒'}\n{v}")
+
+
 def support(message):
     bot.send_message(-1001980704979, text=f"{message.chat.username} просит о помощи \n{message.text}")
-
+    create_keyboard_2()
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
@@ -171,7 +219,6 @@ def query_handler(call):
     if flag == "n":
         sr = ""
         num = int(data)
-        print(num)
         con = sl.connect('tgbase.db')
         dish = con.execute(f"SELECT photo,name,weight,description,price,stoped FROM DISHES").fetchall()
         for a in dish[num-1][1:5]:
@@ -211,11 +258,13 @@ def query_handler(call):
         spis = []
         id_dish = call.message.json["text"][1]
         kil_vo = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
-        # id_user = call.message.json["chat"]["id"]
+        id_order = con.execute(f"SELECT id FROM ORDERS WHERE user = {call.message.json['chat']['id']} ").fetchall()
         spis.append(id_dish)
         spis.append(kil_vo)
+        spis.append(id_order[0][0])
         with con:
-            con.execute(f"INSERT OR IGNORE INTO GOODS (dishes,kol_vo_dishes) values(?,?)",spis)
+            con.execute(f"INSERT OR IGNORE INTO GOODS (dishes,kol_vo_dishes,orders) values(?,?,?)",spis)
+
 
     if flag == "8":
         text = call.message.json["text"]
@@ -223,8 +272,18 @@ def query_handler(call):
         a = lists[::2]
         bot.send_message(call.message.chat.id, text=f'Выбери блюдо', reply_markup=create_keyb_6(a))
 
+    if flag == "9":
+        bot.send_message(call.message.chat.id, text=f'Ваш заказ подтвержден перейдите во вкладку мои заказы')
+
+
+
     if flag == "b":
-        bot.send_message(call.message.chat.id, text=f'Введи кол-во')
+        bbb["flag"] = data
+        z = bot.send_message(call.message.chat.id, text=f'Введи кол-во',)
+        bot.register_next_step_handler(z,change)
+
+
+
 
 
 
