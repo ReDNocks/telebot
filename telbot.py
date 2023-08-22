@@ -486,24 +486,13 @@ def query_handler(call):
         bot.send_message(call.message.chat.id, text=f'Выберите действие',reply_markup=adminusers(data))
 
     if flag =="c":
-        if call.data[1] == "1":
-            user_bbb['c'] = data
-            g = bot.send_message(call.message.chat.id, text=f'Введите новое имя')
+        user_bbb['c'] = data
+        if call.data[1] == "3":
+            g = bot.send_message(call.message.chat.id,text=f'Введите должность Где: 0-Пользователь, 2-Администратор/помошник')
             bot.register_next_step_handler(g, users_change)
 
-        elif call.data[1] == "2":
-            user_bbb['c'] = data
-            g = bot.send_message(call.message.chat.id, text=f'Введите новый адрес доставки начиная с ул.')
-            bot.register_next_step_handler(g, users_change)
-
-        elif call.data[1] == "3":
-            user_bbb['c'] = data
-            g = bot.send_message(call.message.chat.id, text=f'Введите должность Где: 0-Пользователь, 2-Администратор/помошник')
-            bot.register_next_step_handler(g, users_change)
-
-        elif call.data[1] == "4":
-            user_bbb['c'] = data
-            g = bot.send_message(call.message.chat.id, text=f'Введите новый телефон начиная с +375')
+        else:
+            g = bot.send_message(call.message.chat.id, text=f'Введите изменения')
             bot.register_next_step_handler(g, users_change)
 
     if flag == "d":
@@ -555,14 +544,6 @@ def query_handler(call):
         else:
             y = bot.send_message(call.message.chat.id, text=f'Введите изменения(или загрузите фото)')
             bot.register_next_step_handler(y, dish_change)
-
-
-
-
-
-
-
-
 
 
 print("Ready")
