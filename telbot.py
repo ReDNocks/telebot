@@ -362,15 +362,14 @@ def dish_change(message):
         bot.send_message(message.chat.id,text=f"Описание блюда изменено. Для возврата в меню админа /admin")
 
     elif user_bbb['s'][0] == "5":
-        print("В разраб")
+        print(message)
         photo_id = message.photo[-1].file_id
+        name = photo_id+".jpg"
         photo_file = bot.get_file(photo_id)
         photo_bytes = bot.download_file(photo_file.file_path)
-        ste = BytesIO(photo_bytes)
-        # image = Image.open(stream).convert("RGBA")
-        # ste.close()
+
         with con:
-            con.execute(f"UPDATE DISHES SET photo = {ste} WHERE id = {int(user_bbb['s'][1])}")
+            con.execute(f"UPDATE DISHES SET photo = {photo_bytes} WHERE id = {int(user_bbb['s'][1])}")
         bot.send_message(message.chat.id,text=f"Фото блюда изменено. Для возврата в меню админа /admin")
 
     elif user_bbb['s'][0] == "6":
@@ -392,6 +391,12 @@ def dish_change(message):
         with con:
             con.execute(f"UPDATE DISHES SET stoped = {int(message.text)} WHERE id = {int(user_bbb['s'][1])}")
         bot.send_message(message.chat.id,text=f"'Stop' блюда изменен. Для возврата в меню админа /admin")
+
+def dish_add(message):
+    con = sl.connect('tgbase.db')
+    with con:
+        con.execute(f"INSERT OR IGNORE INTO DISHES (name) values('{message.text}')")
+    bot.send_message(message.chat.id, text=f"Блюдо успешно добавлено. Для возврата в меню админа /admin")
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -521,8 +526,8 @@ def query_handler(call):
 
     if flag == "h":
         if call.data[1:] == "v1":
-            f = bot.send_message(call.message.chat.id, text=f'даров')
-            # bot.register_next_step_handler(f, categ_add)
+            f = bot.send_message(call.message.chat.id, text=f'Введите название нового блюда, а затем с помощью панели админа отредактируйте.')
+            bot.register_next_step_handler(f, dish_add)
 
         elif call.data[1:] =="v2":
             dish = con.execute(f"SELECT id, name FROM DISHES ").fetchall()
@@ -544,6 +549,8 @@ def query_handler(call):
         else:
             y = bot.send_message(call.message.chat.id, text=f'Введите изменения(или загрузите фото)')
             bot.register_next_step_handler(y, dish_change)
+
+
 
 
 print("Ready")
