@@ -48,13 +48,12 @@ with con:
             weight TEXT,
             price TEXT,
             description LONGTEXT,
-            photo IMAGE,
+            photo LONGTEXT,
             category INTEGER,
             cooking_time DATATIME,
             rating INTEGER,
             stoped BOOLEAN,
             FOREIGN KEY (category)  REFERENCES CATEGORY (id)
-             
         );
     """)
     #Категория блюд
@@ -65,5 +64,25 @@ with con:
         );
     """)
 
+    # Рейтинг блюд
+    con.execute("""
+            CREATE TABLE IF NOT EXISTS RATING(
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                dish INTEGER,
+                rating INTEGER,
+                FOREIGN KEY (dish)  REFERENCES DISHES (id)
+            );
+        """)
 
+    # Коментарии блюд
+    con.execute("""
+            CREATE TABLE IF NOT EXISTS COMMENTS (
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                dish INTEGER,
+                id_users INTEGER,
+                comments LONGTEXT,
+                FOREIGN KEY (dish)  REFERENCES DISHES (id)
+                FOREIGN KEY (id_users)  REFERENCES USERS (id)
+            );
+        """)
 
