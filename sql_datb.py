@@ -12,6 +12,7 @@ with con:
             address TEXT,
             post INTEGER,
             tel TEXT,
+            id_vk TEXT,
             UNIQUE(tel),
             UNIQUE(id_telegram)
         );

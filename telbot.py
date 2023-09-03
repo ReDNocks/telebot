@@ -6,7 +6,6 @@ from telebot.types import InputMediaPhoto
 import sqlite3 as sl
 from functools import partial
 bot = telebot.TeleBot('6673879527:AAGKIM0bC1Aqqk2uhKkx5w71Yupa2WBYYhg')
-global user
 user = []
 
 def create_keyboard_1():
@@ -204,10 +203,9 @@ def reg(message):
         a = bot.send_message(message.chat.id, text="Введите свое имя c большой буквы")
         id_user = message.json["chat"]["id"]
         ord_date = message.json["date"]
-        dt_object = datetime.fromtimestamp(ord_date)
         user.append(id_user)
         with con:
-            con.execute(f"INSERT OR IGNORE INTO ORDERS (user,date) values({int(id_user)},{dt_object})")
+            con.execute(f"INSERT OR IGNORE INTO ORDERS (user,date) values({int(id_user)},{ord_date})")
 
     elif message.text == "Корзина 🛒":
         kor(message)
