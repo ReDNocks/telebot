@@ -71,13 +71,12 @@ def menu_gen(num):
         keyb.add_callback_button(label='Назад', color=VkKeyboardColor.PRIMARY, payload={"name_2": num - 1})
     return keyb
 
-def create_keyb_3():
-    # boon, dish
-    # {boon}
+def create_keyb_3(boon):
+
     keyb = VkKeyboard(**settings2)
-    keyb.add_callback_button(label="➕", color=VkKeyboardColor.PRIMARY, payload={"keyb_3": 1})
-    keyb.add_callback_button(label=f"rtrt", color=VkKeyboardColor.PRIMARY, payload={"keyb_3": 5})
     keyb.add_callback_button(label="➖", color=VkKeyboardColor.PRIMARY, payload={"keyb_3": 2})
+    keyb.add_callback_button(label=f"{str(boon+boon)}", color=VkKeyboardColor.PRIMARY, payload={"keyb_3": 5})
+    keyb.add_callback_button(label="➕", color=VkKeyboardColor.PRIMARY, payload={"keyb_3": 1})
     keyb.add_line()
     keyb.add_callback_button(label="Заказать 📒", color=VkKeyboardColor.PRIMARY, payload={"keyb_3": 3})
     keyb.add_callback_button(label="Добавить в корзину 🛒", color=VkKeyboardColor.PRIMARY, payload={"keyb_3": 4})
@@ -96,7 +95,7 @@ def dish_catalog(num):
         maxi = len(dish_k)
     for i in range((num-1)*el_count, maxi):
         if num == list(dish_k[i])[1]:
-            keyb_dish.add_callback_button(label=list(dish_k[i])[0], color=VkKeyboardColor.PRIMARY,payload={"dish": i + 1})
+            keyb_dish.add_callback_button(label=list(dish_k[i])[0], color=VkKeyboardColor.PRIMARY,payload={"dish": (dish_k[i])[0]})
             keyb_dish.add_line()
     if num == 1:
         keyb_dish.add_callback_button(label='Далее', color=VkKeyboardColor.PRIMARY, payload={"name_3": num + 1})
@@ -107,41 +106,31 @@ def dish_catalog(num):
         keyb_dish.add_callback_button(label='Назад', color=VkKeyboardColor.PRIMARY, payload={"name_3": num - 1})
     return keyb_dish
 
-def dish(obj):
+def dish(objec):
     a = []
     sr = ""
-    num = int(obj.object.payload.get('categ'))
-    dish = con.execute(f"SELECT photo,name,weight,description,price FROM DISHES WHERE stoped={0}").fetchall()
-    rating = con.execute(f"SELECT rating FROM rating WHERE dish = {num}").fetchall()
+    dish_id = con.execute(f"SELECT id FROM DISHES WHERE stoped={0} AND name ='{objec.object.payload.get('dish')}'").fetchone()
+    rating = con.execute(f"SELECT rating FROM rating WHERE dish = {int(dish_id[0])}").fetchone()
     for x in range(len(rating)):
-        a.append(rating[x][0])
-    rating_list = f"Рейтинг блюда: {(4 + int(sum(a))) / len(rating)}"
-    photo = open(f"C:/Users/ReDWaR/PycharmProjects/pythonProject_telebot/photo/{dish[num - 1][0]}.png", 'rb')
+        a.append(rating[x])
+    rating_list = (4 + int(sum(a))) / len(rating)
+    with con:
+        con.execute(f"UPDATE DISHES SET rating = {int(rating_list)} WHERE id = {int(dish_id[0])}")
+    dish = con.execute(f"SELECT id,photo,name,weight,description,price,rating FROM DISHES WHERE stoped={0} AND name ='{objec.object.payload.get('dish')}'").fetchone()
 
-    photo = vk_upload.photo_messages(f"C:/Users/ReDWaR/PycharmProjects/pythonProject_telebot/photo/{dish[num - 1][0]}.png")
+    photo = vk_upload.photo_messages(f"C:/Users/ReDWaR/PycharmProjects/pythonProject_telebot/photo/{dish[1]}.png")
     owner_id = photo[0]['owner_id']
     photo_id = photo[0]['id']
     access_key = photo[0]['access_key']
     attachment = f'photo{owner_id}_{photo_id}_{access_key}'
-    for a in dish[num - 1][1:5]:
+    for a in dish[2:6]:
         sr += f'{str(a)}\n'
     last_id = vk.messages.edit(
         attachment=attachment,
-        peer_id=event.obj.peer_id,
-        message=f'№{num}\n{sr}{rating_list}',
-        conversation_message_id=event.obj.conversation_message_id,
-        keyboard=create_keyb_3().get_keyboard())
-
-
-
-
-
-    # bot.send_photo(call.message.chat.id, photo)
-    # bot.send_message(call.message.chat.id, text=f'№{num}\n{sr}{rating_list}', reply_markup=create_keyb_4(1, num))
-
-
-
-
+        peer_id=objec.obj.peer_id,
+        message=f'{sr}Рейтинг блюда: {dish[6]}',
+        conversation_message_id=objec.obj.conversation_message_id,
+        keyboard=create_keyb_3(1).get_keyboard())
 
 
 #Смена id пользователя
@@ -167,8 +156,6 @@ def change_id_user(phone,obj):
 
 
 for event in longpoll.listen():
-    print(event)
-    print()
     con = sl.connect('tgbase.db')
     if event.type == VkBotEventType.MESSAGE_NEW: #Отлавливает сообщение
 
@@ -310,7 +297,15 @@ for event in longpoll.listen():
                 conversation_message_id=event.obj.conversation_message_id,
                 keyboard=dish_catalog(event.object.payload.get('categ')).get_keyboard())
 
-
+        elif event.object.payload.get('dish'):
+            dish(event)
+        elif event.object.payload.get("keyb_3") == 1:
+            create_keyb_3(1)
+            # last_id = vk.messages.edit(
+            #     peer_id=event.obj.peer_id,
+            #     message = 'h',
+            #     conversation_message_id=event.obj.conversation_message_id,
+            #     keyboard=create_keyb_3(1).get_keyboard())
 
 
 

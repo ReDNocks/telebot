@@ -22,11 +22,6 @@ def create_keyboard_2():
     btn4 = types.KeyboardButton("Мои заказы 📒")
     markup2.add(btn1, btn2,btn3,btn4)
     return markup2
-def create_keyboard_3():
-    markup3 = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btn1 = types.KeyboardButton("ОК 🆗")
-    markup3.add(btn1)
-    return markup3
 
 def menu_gen():
     con = sl.connect('tgbase.db')
@@ -452,23 +447,28 @@ def query_handler(call):
         num = int(data)
         for i in range(len(dish_k)):
             if num == list(dish_k[i])[1]:
-                keyb_dish.add(InlineKeyboardButton(list(dish_k[i])[0], callback_data="n" + str(i + 1)))
+                keyb_dish.add(InlineKeyboardButton(list(dish_k[i])[0], callback_data="n" + list(dish_k[i])[0]))
         bot.send_message(call.message.chat.id, text="Выберите блюдо", reply_markup=keyb_dish)
 
     if flag == "n":
         a = []
         sr = ""
-        num = int(data)
-        dish = con.execute(f"SELECT photo,name,weight,description,price FROM DISHES WHERE stoped={0}").fetchall()
-        rating = con.execute(f"SELECT rating FROM rating WHERE dish = {num}").fetchall()
+        dish_id = con.execute(
+            f"SELECT id FROM DISHES WHERE stoped={0} AND name ='{data}'").fetchone()
+        rating = con.execute(f"SELECT rating FROM rating WHERE dish = {int(dish_id[0])}").fetchone()
         for x in range(len(rating)):
-            a.append(rating[x][0])
-        rating_list = f"Рейтинг блюда: {(4+int(sum(a)))/len(rating)}"
-        photo = open(f"C:/Users/ReDWaR/PycharmProjects/pythonProject_telebot/photo/{dish[num - 1][0]}.png", 'rb')
-        for a in dish[num-1][1:5]:
+            a.append(rating[x])
+        rating_list = (4 + int(sum(a))) / len(rating)
+        with con:
+            con.execute(f"UPDATE DISHES SET rating = {int(rating_list)} WHERE id = {int(dish_id[0])}")
+        dish = con.execute(
+            f"SELECT id,photo,name,weight,description,price,rating FROM DISHES WHERE stoped={0} AND name ='{data}'").fetchone()
+
+        photo = open(f"C:/Users/ReDWaR/PycharmProjects/pythonProject_telebot/photo/{dish[1]}.png", 'rb')
+        for a in dish[2:6]:
             sr += f'{str(a)}\n'
         bot.send_photo(call.message.chat.id, photo)
-        bot.send_message(call.message.chat.id,text=f'№{num}\n{sr}{rating_list}',reply_markup=create_keyb_4(1,num))
+        bot.send_message(call.message.chat.id,text=f'{sr}Рейтинг блюда: {dish[6]}',reply_markup=create_keyb_4(1,dish_id[0]))
 
     if flag == '1':
         text = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
@@ -490,16 +490,23 @@ def query_handler(call):
         a = []
         sr = ""
         num = int(data)+1
-        dish = con.execute(f"SELECT photo,name,weight,description,price FROM DISHES WHERE stoped = {0}").fetchall()
-        rating = con.execute(f"SELECT rating FROM rating WHERE dish = {num}").fetchall()
-        for x in range(len(rating)):
-            a.append(rating[x][0])
-        rating_list = f"Рейтинг блюда: {(4+int(sum(a)))/len(rating)}"
-        photo = open(f"C:/Users/ReDWaR/PycharmProjects/pythonProject_telebot/photo/{dish[num - 1][0]}.png", 'rb')
-        for a in dish[num - 1][1:5]:
+        try:
+            rating = con.execute(f"SELECT rating FROM rating WHERE dish = {num}").fetchone()
+            for x in range(len(rating)):
+                a.append(rating[x])
+            rating_list =(4+int(sum(a)))/len(rating)
+        except:
+            rating_list = 4
+
+        with con:
+            con.execute(f"UPDATE DISHES SET rating = {int(rating_list)} WHERE id = {num}")
+        dish = con.execute(
+            f"SELECT photo,name,weight,description,price,rating FROM DISHES WHERE stoped = {0} AND id = {num}").fetchone()
+        photo = open(f"C:/Users/ReDWaR/PycharmProjects/pythonProject_telebot/photo/{dish[0]}.png", 'rb')
+        for a in dish[1:4]:
             sr += f'{str(a)}\n'
         bot.send_photo(call.message.chat.id, photo)
-        bot.send_message(call.message.chat.id, text=f'№{num}\n{sr}{rating_list}', reply_markup=create_keyb_4(1,num))
+        bot.send_message(call.message.chat.id, text=f'{sr}Рейтинг блюда: {dish[5]}', reply_markup=create_keyb_4(1,num))
 
     if flag == "4":
         bot.send_message(call.message.chat.id, text="Товар успешно добавлен в корзину")
