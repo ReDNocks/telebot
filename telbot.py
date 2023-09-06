@@ -497,7 +497,6 @@ def query_handler(call):
             rating_list =(4+int(sum(a)))/len(rating)
         except:
             rating_list = 4
-
         with con:
             con.execute(f"UPDATE DISHES SET rating = {int(rating_list)} WHERE id = {num}")
         dish = con.execute(
