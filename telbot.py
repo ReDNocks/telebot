@@ -2,9 +2,7 @@ from datetime import datetime
 import telebot
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from telebot.types import InputMediaPhoto
 import sqlite3 as sl
-from functools import partial
 bot = telebot.TeleBot('6673879527:AAGKIM0bC1Aqqk2uhKkx5w71Yupa2WBYYhg')
 user = []
 
@@ -313,7 +311,6 @@ def ord(message):
 
 def orders_delete(message):
     con = sl.connect('tgbase.db')
-    print(message.json['text'])
     with con:
         con.execute(f"DELETE FROM ORDERS WHERE user = {message.json['chat']['id']} AND id = {int(message.json['text'])}")
     bot.send_message(message.chat.id, text=f"Ваш заказ успешно отменен")
@@ -423,7 +420,7 @@ def dish_add(message):
         con.execute(f"INSERT OR IGNORE INTO DISHES (name,stoped) values('{message.text}',{0})")
     bot.send_message(message.chat.id, text=f"Блюдо успешно добавлено. Для возврата в меню админа /admin")
 
-def rating(message):
+def ratings(message):
     con = sl.connect('tgbase.db')
     if 0 < int(message.text) <= 5:
         with con:
@@ -485,6 +482,26 @@ def query_handler(call):
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=create_keyb_4(int(text)-1,num))
+
+    if flag == '3':
+        spis = []
+        id_dish = call.message.json["text"][1]
+        kil_vo = call.message.json["reply_markup"]['inline_keyboard'][0][1]["text"]
+        max_data = con.execute(
+            f"SELECT MAX(date) FROM ORDERS WHERE user = {call.message.json['chat']['id']} ").fetchall()
+        id_order = con.execute(
+            f"SELECT id FROM ORDERS WHERE user = {call.message.json['chat']['id']} and date = {max_data[0][0]}").fetchall()
+        spis.append(id_dish)
+        spis.append(kil_vo)
+        spis.append(id_order[0][0])
+        with con:
+            con.execute(f"INSERT OR IGNORE INTO GOODS (dishes,kol_vo_dishes,orders) values(?,?,?)", spis)
+        id_user = call.message.json["chat"]["id"]
+        ord_date = call.message.json["date"]
+        user.append(id_user)
+        with con:
+            con.execute(f"INSERT OR IGNORE INTO ORDERS (user,date) values({int(id_user)},{ord_date})")
+        bot.send_message(call.message.chat.id, text=f'Ваш заказ подтвержден перейдите во вкладку мои заказы')
 
     if flag == 'z':
         a = []
@@ -622,7 +639,7 @@ def query_handler(call):
     if flag == "X":
         user_bbb['FFF'] = call.data[1]
         x = bot.send_message(call.message.chat.id, text=f'Введите как вы оцниваете блюдо по шкале от 1 до 5.')
-        bot.register_next_step_handler(x, rating)
+        bot.register_next_step_handler(x, ratings)
 
 
 
