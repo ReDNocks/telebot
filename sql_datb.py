@@ -81,7 +81,7 @@ with con:
                 id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
                 dish INTEGER,
                 id_users INTEGER,
-                comments LONGTEXT,
+                comments TEXT,
                 FOREIGN KEY (dish)  REFERENCES DISHES (id)
                 FOREIGN KEY (id_users)  REFERENCES USERS (id)
             );

@@ -103,6 +103,7 @@ def create_keyb_7(id_orders):
     create_keyb_7 = VkKeyboard(**settings2)
     create_keyb_7.add_callback_button(label="Отменить заказ", color=VkKeyboardColor.PRIMARY,payload={"keyb_7": 1,"keyb_7_id_ord":id_orders})
     create_keyb_7.add_callback_button(label="Оценить блюдо", color=VkKeyboardColor.PRIMARY,payload={"keyb_7": 2})
+    create_keyb_7.add_callback_button(label="Оставить коментарий к блюду", color=VkKeyboardColor.PRIMARY, payload={"keyb_7": 3})
     return create_keyb_7
 
 def create_keyb_8(id):
